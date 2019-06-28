@@ -7,9 +7,11 @@
 import speech_to_text
 import analyze_text
 
-STOPWORD_SET = {}
-
+START_COMMAND = ["hey dolly", "hey, dolly"]
 AVAILABLE_LANGUAGE = ["english", "korean", "japanese", "chinese"]
+SAMPLE_RATE = 16000
+CHUNK = int(SAMPLE_RATE // 10)  # 100ms
+
 
 
 def instructions():
@@ -17,7 +19,7 @@ def instructions():
     print("Starting Dolly...\n")
 
     print("Start recording with 'Hey Dolly!'")
-    speech_to_text.SpeechToText().short_response(["hey dolly", "hey, dolly"])
+    speech_to_text.SpeechToText().short_response(START_COMMAND)
     print()
 
     print("----- Welcome to Dolly! -----")
@@ -30,7 +32,7 @@ def instructions():
         user_language = ""
         for lang in AVAILABLE_LANGUAGE:
             user_language += lang + "  "
-        language = input("Enter either " + user_language + ": ")
+        language = input("Enter either " + user_language[:-2] + ": ")
         language = language.lower()
         # TODO
         # print("Enter either English, Korean, Japanese, Chinese: ")
@@ -73,18 +75,22 @@ def instructions():
     return language_code, exit_command, speaker_count, speakers
 
 
+def run(language_code, exit_command, speaker_count, speakers):
+    global SAMPLE_RATE, CHUNK
+
+    config = speech_to_text.SpeechToTextConfig(speakers, speaker_count, SAMPLE_RATE, CHUNK, language_code, exit_command)
+    text = speech_to_text.SpeechToText(config).execute()
+
+    analyze_text.AnalyzeText(speakers=config.speakers, speaker_count=config.speaker_count).analyze(text)
+
+
 if __name__ == '__main__':
     language_code, exit_command, speaker_count, speakers = instructions()
 
     print("Dolly is litening...")
     print()
 
-    sample_rate = 16000
-    chunk = int(sample_rate // 10)  # 100ms
+    run(language_code, exit_command, speaker_count, speakers)
 
-    config = speech_to_text.SpeechToTextConfig(speakers, speaker_count, sample_rate, chunk, language_code, exit_command)
-    text = speech_to_text.SpeechToText(config).execute()
-
-    analyze_text.AnalyzeText(speakers=config.speakers, speaker_count=config.speaker_count).analyze(text)
     print()
     print('----- Thank you for using Dolly! -----')
