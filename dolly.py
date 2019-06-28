@@ -113,6 +113,7 @@ def output_and_modification(output, speakers, speaker_count):
                 print("======")
                 print(output)
                 print("======")
+    return output
 
 
 def print_export_analysis(output, more_than_30, more_than_10, random_keywords):
@@ -152,9 +153,29 @@ def run(language_code, exit_command, speaker_count, speakers):
     global SAMPLE_RATE, CHUNK
 
     config = speech_to_text.SpeechToTextConfig(speakers, speaker_count, SAMPLE_RATE, CHUNK, language_code, exit_command)
-    text = speech_to_text.SpeechToText(config).execute()
 
-    output_and_modification(text, config.speakers, config.speaker_count)
+    short_or_long = ""
+    while short_or_long not in ['y', 'n']:
+        short_or_long = input("Will your meeting be over 5 minutes? (y/n): ").lower()
+
+    if short_or_long == 'n':
+        print("Dolly is litening...")
+        print()
+        text = speech_to_text.SpeechToText(config).short_stream_meet()
+    elif short_or_long == 'y':
+        time = ""
+        while not isinstance(time, int):
+            time = input("Approximately, how long will your meeting be? (min): ")
+            try:
+                time = int(time)
+            except:
+                continue
+        print("Dolly is litening...")
+        print()
+        time = time * 60
+        text = speech_to_text.SpeechToText(config).long_asynchronous_meet(seconds=time)
+
+    text = output_and_modification(text, config.speakers, config.speaker_count)
 
     more_than_30, more_than_10, random_keywords = analyze_text.AnalyzeText(speakers=config.speakers, speaker_count=config.speaker_count, random_keywords_count=RANDOM_KEYWORDS_COUNT).analyze(text)
     print_export_analysis(text, more_than_30, more_than_10, random_keywords)
@@ -162,9 +183,6 @@ def run(language_code, exit_command, speaker_count, speakers):
 
 if __name__ == '__main__':
     language_code, exit_command, speaker_count, speakers = instructions()
-
-    print("Dolly is litening...")
-    print()
 
     run(language_code, exit_command, speaker_count, speakers)
 
