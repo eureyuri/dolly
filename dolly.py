@@ -4,6 +4,8 @@
 # https://cloud.google.com/speech-to-text/docs/streaming-recognize#speech-streaming-recognize-python
 # https://cloud.google.com/speech-to-text/docs/multiple-voices
 
+import datetime
+
 import speech_to_text
 import analyze_text
 
@@ -11,7 +13,7 @@ START_COMMAND = ["hey dolly", "hey, dolly"]
 AVAILABLE_LANGUAGE = ["english", "korean", "japanese", "chinese"]
 SAMPLE_RATE = 16000
 CHUNK = int(SAMPLE_RATE // 10)  # 100ms
-
+RANDOM_KEYWORDS_COUNT = 5
 
 
 def instructions():
@@ -75,13 +77,87 @@ def instructions():
     return language_code, exit_command, speaker_count, speakers
 
 
+def output_and_modification(output, speakers, speaker_count):
+    print("------")
+    print("Dolly heard:")
+    print(output)
+    print("------")
+
+    switch = ""
+    while switch != "y" and switch != "n":
+        print()
+        switch = input("Would you like to switch the speaker names? (y/n): ").lower()
+
+    if switch == "y":
+        switching = True
+        while switching:
+            print()
+            print("Type quit to continue")
+            print()
+            print("Please select valid number to change")
+            for i in range(speaker_count):
+                print(str(i) + ": " + speakers[i])
+            answer = input()
+            if answer == "quit":
+                switching = False
+            try:
+                answer = int(answer)
+            except:
+                continue
+
+            if int(answer) < len(speakers):
+                new_name = input("New name: ") + ": "
+                old_name = speakers[answer]
+                speakers[answer] = new_name
+                output = output.replace(old_name, new_name)
+                print("======")
+                print(output)
+                print("======")
+
+
+def print_export_analysis(output, more_than_30, more_than_10, random_keywords):
+    print()
+    print("------")
+    print("Mentioned more than 30 times:")
+    print(more_than_30)
+
+    print("------")
+    print("Mentioned more than 10 times:")
+    print(more_than_10)
+
+    print("------")
+    print("Dolly's random suggestions:")
+    print(random_keywords)
+    print("------")
+
+    print()
+    print("Exporting transcript...")
+    print()
+
+    output += "\n------\n Mentioned more than 30 times: " + str(more_than_30) + "\n------\n Mentioned more than 10 times: " + str(more_than_10) + "\n------\n Dolly's random suggestions: " + str(random_keywords) + "\n------\n"
+
+    now = datetime.datetime.now()
+    now = now.strftime("%Y-%m-%d_%H:%M")
+
+    f = open("output/" + now + ".txt", "x")
+    f.write(output)
+    f.close()
+
+    print("======")
+    print("Finished exporting")
+    print("======")
+
+
 def run(language_code, exit_command, speaker_count, speakers):
     global SAMPLE_RATE, CHUNK
 
     config = speech_to_text.SpeechToTextConfig(speakers, speaker_count, SAMPLE_RATE, CHUNK, language_code, exit_command)
     text = speech_to_text.SpeechToText(config).execute()
 
-    analyze_text.AnalyzeText(speakers=config.speakers, speaker_count=config.speaker_count).analyze(text)
+    output_and_modification(text, config.speakers, config.speaker_count)
+
+    more_than_30, more_than_10, random_keywords = analyze_text.AnalyzeText(speakers=config.speakers, speaker_count=config.speaker_count, random_keywords_count=RANDOM_KEYWORDS_COUNT).analyze(text)
+    print_export_analysis(text, more_than_30, more_than_10, random_keywords)
 
 
 if __name__ == '__main__':
