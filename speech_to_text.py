@@ -188,14 +188,14 @@ class SpeechToText:
 
         stream = p.open(format=sample_format,
                         channels=channels,
-                        rate=self.sample_rate,
-                        frames_per_buffer=self.chunk,
+                        rate=self.config.sample_rate,
+                        frames_per_buffer=self.config.chunk,
                         input=True)
 
         frames = []
 
-        for i in range(0, int(self.sample_rate / self.chunk * seconds)):
-            data = stream.read(self.chunk)
+        for i in range(0, int(self.config.sample_rate / self.config.chunk * seconds)):
+            data = stream.read(self.config.chunk)
             frames.append(data)
 
         stream.stop_stream()
@@ -209,7 +209,7 @@ class SpeechToText:
         wf = wave.open(filename, 'wb')
         wf.setnchannels(channels)
         wf.setsampwidth(p.get_sample_size(sample_format))
-        wf.setframerate(self.sample_rate)
+        wf.setframerate(self.config.sample_rate)
         wf.writeframes(b''.join(frames))
         wf.close()
 
@@ -224,8 +224,8 @@ class SpeechToText:
         audio = types.RecognitionAudio(uri=gcs_uri)
         config = types.RecognitionConfig(
             encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
-            sample_rate_hertz=self.sample_rate,
-            language_code=self.language_code)
+            sample_rate_hertz=self.config.sample_rate,
+            language_code=self.config.language_code)
 
         operation = self.config.client.long_running_recognize(config, audio)
 

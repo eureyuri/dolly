@@ -158,6 +158,8 @@ def run(language_code, exit_command, speaker_count, speakers):
         short_or_long = input("Will your meeting be over 5 minutes? (y/n): ").lower()
 
     if short_or_long == 'n':
+        print("Dolly is litening...")
+        print()
         text = speech_to_text.SpeechToText(config).short_stream_meet()
     elif short_or_long == 'y':
         time = ""
@@ -167,6 +169,8 @@ def run(language_code, exit_command, speaker_count, speakers):
                 time = int(time)
             except:
                 continue
+        print("Dolly is litening...")
+        print()
         text = speech_to_text.SpeechToText(config).long_asynchronous_meet(seconds=time)
 
     output_and_modification(text, config.speakers, config.speaker_count)
@@ -177,9 +181,6 @@ def run(language_code, exit_command, speaker_count, speakers):
 
 if __name__ == '__main__':
     language_code, exit_command, speaker_count, speakers = instructions()
-
-    print("Dolly is litening...")
-    print()
 
     run(language_code, exit_command, speaker_count, speakers)
 
