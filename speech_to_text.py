@@ -4,8 +4,6 @@ from six.moves import queue
 import re
 import sys
 
-import analyze_text
-
 from google.cloud import speech_v1p1beta1 as speech
 from google.cloud.speech_v1p1beta1 import enums
 from google.cloud.speech_v1p1beta1 import types
@@ -87,36 +85,36 @@ class SpeechToTextConfig:
         self.language_code = language_code
         self.exit_command = exit_command
 
-
-class SpeechToText:
-    def __init__(self, config=None):
-        self.config = config
-
-    def execute(self):
-        client = speech.SpeechClient()
-        config = types.RecognitionConfig(
+        self.client = speech.SpeechClient()
+        self.recognition_config = types.RecognitionConfig(
             encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
-            sample_rate_hertz=self.config.sample_rate,
-            language_code=self.config.language_code,
+            sample_rate_hertz=self.sample_rate,
+            language_code=self.language_code,
             enable_speaker_diarization=True,
-            diarization_speaker_count=self.config.speaker_count)
-        streaming_config = types.StreamingRecognitionConfig(
-            config=config,
+            diarization_speaker_count=self.speaker_count)
+        self.streaming_config = types.StreamingRecognitionConfig(
+            config=self.recognition_config,
             interim_results=True)
         # indicates that this stream request should return temporary results
         # that may be refined at a later time (after processing more audio).
         # Interim results will be noted within responses through the setting of
         # is_final to false
 
+
+class SpeechToText:
+    def __init__(self, config=None):
+        self.config = config
+
+    def execute(self):
         with MicrophoneStream(self.config.sample_rate, self.config.chunk) as stream:
             audio_generator = stream.generator()
             requests = (types.StreamingRecognizeRequest(audio_content=content)
                         for content in audio_generator)
 
-            responses = client.streaming_recognize(streaming_config, requests)
+            responses = self.config.client.streaming_recognize(self.config.streaming_config, requests)
 
             # Now, put the transcription responses to use.
-            self.listen_print_loop(responses)
+            return self.listen_print_loop(responses)
 
     def listen_print_loop(self, responses):
         """
@@ -164,10 +162,7 @@ class SpeechToText:
 
                 # Exit recognition
                 if re.search(self.config.exit_command, transcript, re.I):
-                    analyze_text.AnalyzeText(speakers=self.config.speakers, speaker_count=self.config.speaker_count).analyze_output(output)
-                    print()
-                    print('----- Thank you for using Dolly! -----')
-                    break
+                    return output
 
                 num_chars_printed = 0
 
