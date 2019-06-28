@@ -5,6 +5,7 @@
 # https://cloud.google.com/speech-to-text/docs/multiple-voices
 
 import speech_to_text
+import analyze_text
 
 STOPWORD_SET = {}
 
@@ -74,6 +75,7 @@ def instructions():
 
 if __name__ == '__main__':
     language_code, exit_command, speaker_count, speakers = instructions()
+
     print("Dolly is litening...")
     print()
 
@@ -81,4 +83,8 @@ if __name__ == '__main__':
     chunk = int(sample_rate // 10)  # 100ms
 
     config = speech_to_text.SpeechToTextConfig(speakers, speaker_count, sample_rate, chunk, language_code, exit_command)
-    speech_to_text.SpeechToText(config).execute()
+    text = speech_to_text.SpeechToText(config).execute()
+
+    analyze_text.AnalyzeText(speakers=config.speakers, speaker_count=config.speaker_count).analyze(text)
+    print()
+    print('----- Thank you for using Dolly! -----')

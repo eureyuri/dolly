@@ -116,7 +116,7 @@ class SpeechToText:
             responses = client.streaming_recognize(streaming_config, requests)
 
             # Now, put the transcription responses to use.
-            self.listen_print_loop(responses)
+            return self.listen_print_loop(responses)
 
     def listen_print_loop(self, responses):
         """
@@ -164,10 +164,7 @@ class SpeechToText:
 
                 # Exit recognition
                 if re.search(self.config.exit_command, transcript, re.I):
-                    analyze_text.AnalyzeText(speakers=self.config.speakers, speaker_count=self.config.speaker_count).analyze_output(output)
-                    print()
-                    print('----- Thank you for using Dolly! -----')
-                    break
+                    return output
 
                 num_chars_printed = 0
 

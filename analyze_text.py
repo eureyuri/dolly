@@ -24,7 +24,7 @@ class AnalyzeText:
 
         return word_num
 
-    def analyze_output(self, output):
+    def analyze(self, output):
         word_num = self.word_count(output)
 
         print("------")
