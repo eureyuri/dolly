@@ -152,7 +152,22 @@ def run(language_code, exit_command, speaker_count, speakers):
     global SAMPLE_RATE, CHUNK
 
     config = speech_to_text.SpeechToTextConfig(speakers, speaker_count, SAMPLE_RATE, CHUNK, language_code, exit_command)
-    text = speech_to_text.SpeechToText(config).execute()
+
+    short_or_long = ""
+    while short_or_long not in ['y', 'n']:
+        short_or_long = input("Will your meeting be over 5 minutes? (y/n): ").lower()
+
+    if short_or_long == 'n':
+        text = speech_to_text.SpeechToText(config).short_stream_meet()
+    elif short_or_long == 'y':
+        time = ""
+        while not isinstance(time, int):
+            time = input("Approximately, how long will your meeting be?: ")
+            try:
+                time = int(time)
+            except:
+                continue
+        text = speech_to_text.SpeechToText(config).long_asynchronous_meet(seconds=time)
 
     output_and_modification(text, config.speakers, config.speaker_count)
 

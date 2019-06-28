@@ -1,5 +1,7 @@
+import datetime
 import pyaudio
 from six.moves import queue
+import wave
 
 import re
 import sys
@@ -7,6 +9,7 @@ import sys
 from google.cloud import speech_v1p1beta1 as speech
 from google.cloud.speech_v1p1beta1 import enums
 from google.cloud.speech_v1p1beta1 import types
+from google.cloud import storage
 import speech_recognition as sr
 
 
@@ -105,7 +108,7 @@ class SpeechToText:
     def __init__(self, config=None):
         self.config = config
 
-    def execute(self):
+    def short_stream_meet(self):
         with MicrophoneStream(self.config.sample_rate, self.config.chunk) as stream:
             audio_generator = stream.generator()
             requests = (types.StreamingRecognizeRequest(audio_content=content)
@@ -179,3 +182,62 @@ class SpeechToText:
                     return answer
             except:
                 pass
+
+    def long_asynchronous_meet(self, seconds, sample_format=pyaudio.paInt16, channels=1):
+        p = pyaudio.PyAudio()
+
+        stream = p.open(format=sample_format,
+                        channels=channels,
+                        rate=self.sample_rate,
+                        frames_per_buffer=self.chunk,
+                        input=True)
+
+        frames = []
+
+        for i in range(0, int(self.sample_rate / self.chunk * seconds)):
+            data = stream.read(self.chunk)
+            frames.append(data)
+
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
+        # Save the recorded data as a WAV file
+        now = datetime.datetime.now()
+        now = now.strftime("%Y-%m-%d_%H:%M")
+        filename = "output/audio_long_meeting/" + now + ".wav"
+        wf = wave.open(filename, 'wb')
+        wf.setnchannels(channels)
+        wf.setsampwidth(p.get_sample_size(sample_format))
+        wf.setframerate(self.sample_rate)
+        wf.writeframes(b''.join(frames))
+        wf.close()
+
+        storage_client = storage.Client.from_service_account_json('Dolly-secret.json')
+        bucket = storage_client.get_bucket("dolly-long-audio")
+        blob = bucket.blob(filename)
+        blob.upload_from_filename(filename)
+
+        return self.long_transcribe_gcs(gcs_uri="gs://" + "dolly-long-audio" + "/" + filename)
+
+    def long_transcribe_gcs(self, gcs_uri):
+        audio = types.RecognitionAudio(uri=gcs_uri)
+        config = types.RecognitionConfig(
+            encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
+            sample_rate_hertz=self.sample_rate,
+            language_code=self.language_code)
+
+        operation = self.config.client.long_running_recognize(config, audio)
+
+        response = operation.result(timeout=90)
+
+        # Each result is for a consecutive portion of the audio. Iterate through
+        # them to get the transcripts for the entire audio file.
+        text = ""
+        for result in response.results:
+            text += result.alternatives[0].transcript
+            # The first alternative is the most likely one for this portion.
+            # print(u'Transcript: {}'.format(result.alternatives[0].transcript))
+            # print('Confidence: {}'.format(result.alternatives[0].confidence))
+
+        return text
