@@ -1,4 +1,14 @@
+# https://qiita.com/saihara-k/items/86ba457523daa02c1869
+# https://cloud.google.com/docs/authentication/getting-started?hl=ja
 
+# https://cloud.google.com/speech-to-text/docs/streaming-recognize#speech-streaming-recognize-python
+# https://cloud.google.com/speech-to-text/docs/multiple-voices
+
+import speech_to_text
+
+STOPWORD_SET = {}
+
+AVAILABLE_LANGUAGE = ["english", "korean", "japanese", "chinese"]
 
 
 def instructions():
@@ -6,59 +16,69 @@ def instructions():
     print("Starting Dolly...\n")
 
     print("Start recording with 'Hey Dolly!'")
-    short_response(["hey dolly", "hey, dolly"])
+    speech_to_text.SpeechToText().short_response(["hey dolly", "hey, dolly"])
     print()
 
     print("----- Welcome to Dolly! -----")
     print()
     print("Which language will your meeting be in?")
+
+    global AVAILABLE_LANGUAGE
     language = ""
-    while language not in ["english", "korean", "japanese", "chinese"]:
-        language = input("Enter either English, Korean, Japanese, Chinese: ")
+    while language not in AVAILABLE_LANGUAGE:
+        user_language = ""
+        for lang in AVAILABLE_LANGUAGE:
+            user_language += lang + "  "
+        language = input("Enter either " + user_language + ": ")
         language = language.lower()
         # TODO
         # print("Enter either English, Korean, Japanese, Chinese: ")
         # language = short_response(["english", "korean", "japanese", "chinese"])
 
-    global LANGUAGE_CODE
-    global EXIT_COMMAND
     if language == "english":
-        LANGUAGE_CODE = "en-US"
-        EXIT_COMMAND = r'\b(exit|quit)\b'
+        language_code = "en-US"
+        exit_command = r'\b(exit|quit)\b'
         print()
         print("End program with exit or quit")
     elif language == "korean":
-        LANGUAGE_CODE = "ko-KR"
-        EXIT_COMMAND = r'\b(떠나다|휴가)\b'
+        language_code = "ko-KR"
+        exit_command = r'\b(떠나다|휴가)\b'
         print()
         print("End program with 떠나다 or 휴가")
     elif language == "japanese":
-        LANGUAGE_CODE = "ja-JP"
-        EXIT_COMMAND = r'\b(終了|やめる)\b'
+        language_code = "ja-JP"
+        exit_command = r'\b(終了|やめる)\b'
         print()
         print("End program with 終了 or やめる")
     elif language == "chinese":
-        LANGUAGE_CODE = "zh"
-        EXIT_COMMAND = r'\b(放弃|退出)\b'
+        language_code = "zh"
+        exit_command = r'\b(放弃|退出)\b'
         print()
         print("End program with 放弃 or 退出")
 
-    global SPEAKER_COUNT
-    while not isinstance(SPEAKER_COUNT, int):
+    speaker_count = ""
+    while not isinstance(speaker_count, int):
         print()
-        SPEAKER_COUNT = input("How many people are at your meeting today? ")
+        speaker_count = input("How many people are at your meeting today? ")
         try:
-            SPEAKER_COUNT = int(SPEAKER_COUNT)
+            speaker_count = int(speaker_count)
         except:
             continue
 
-    global SPEAKERS
-    for i in range(SPEAKER_COUNT):
-        SPEAKERS.append(input("Input person " + str(i + 1) + "'s name: ") + ": ")
+    speakers = []
+    for i in range(speaker_count):
+        speakers.append(input("Input person " + str(i + 1) + "'s name: ") + ": ")
+
+    return language_code, exit_command, speaker_count, speakers
 
 
 if __name__ == '__main__':
-    instructions()
+    language_code, exit_command, speaker_count, speakers = instructions()
     print("Dolly is litening...")
     print()
-    main()
+
+    sample_rate = 16000
+    chunk = int(sample_rate // 10)  # 100ms
+
+    config = speech_to_text.SpeechToTextConfig(speakers, speaker_count, sample_rate, chunk, language_code, exit_command)
+    speech_to_text.SpeechToText(config).execute()
