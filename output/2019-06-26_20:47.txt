@@ -1,0 +1,12 @@
+eurey: 今日は鳥
+eurey: 今日は僕の作ったプログラムについて話したいと思っています
+eurey: 終わり
+eurey: 終了
+
+------
+ Mentioned more than 30 times: []
+------
+ Mentioned more than 10 times: []
+------
+ Dolly's random suggestions: ['今日は僕の作ったプログラムについて話したいと思っています', '今日は鳥', '終わり', '終了']
+------
