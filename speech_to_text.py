@@ -203,6 +203,7 @@ class SpeechToText:
         p.terminate()
 
         # Save the recorded data as a WAV file
+        print("Exporting...")
         now = datetime.datetime.now()
         now = now.strftime("%Y-%m-%d_%H:%M")
         filename = "output/audio_long_meeting/" + now + ".wav"
@@ -213,6 +214,7 @@ class SpeechToText:
         wf.writeframes(b''.join(frames))
         wf.close()
 
+        print("Uploading to Google Cloud")
         storage_client = storage.Client.from_service_account_json('Dolly-secret.json')
         bucket = storage_client.get_bucket("dolly-long-audio")
         blob = bucket.blob(filename)
@@ -221,13 +223,10 @@ class SpeechToText:
         return self.long_transcribe_gcs(gcs_uri="gs://" + "dolly-long-audio" + "/" + filename)
 
     def long_transcribe_gcs(self, gcs_uri):
+        print("Transcribing... (This may take a while)")
         audio = types.RecognitionAudio(uri=gcs_uri)
-        config = types.RecognitionConfig(
-            encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
-            sample_rate_hertz=self.config.sample_rate,
-            language_code=self.config.language_code)
 
-        operation = self.config.client.long_running_recognize(config, audio)
+        operation = self.config.client.long_running_recognize(self.config.recognition_config, audio)
 
         response = operation.result(timeout=90)
 
@@ -235,7 +234,7 @@ class SpeechToText:
         # them to get the transcripts for the entire audio file.
         text = ""
         for result in response.results:
-            text += result.alternatives[0].transcript
+            text += result.alternatives[0].transcript + '\n'
             # The first alternative is the most likely one for this portion.
             # print(u'Transcript: {}'.format(result.alternatives[0].transcript))
             # print('Confidence: {}'.format(result.alternatives[0].confidence))
