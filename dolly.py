@@ -113,6 +113,7 @@ def output_and_modification(output, speakers, speaker_count):
                 print("======")
                 print(output)
                 print("======")
+    return output
 
 
 def print_export_analysis(output, more_than_30, more_than_10, random_keywords):
@@ -164,16 +165,17 @@ def run(language_code, exit_command, speaker_count, speakers):
     elif short_or_long == 'y':
         time = ""
         while not isinstance(time, int):
-            time = input("Approximately, how long will your meeting be?: ")
+            time = input("Approximately, how long will your meeting be? (min): ")
             try:
                 time = int(time)
             except:
                 continue
         print("Dolly is litening...")
         print()
+        time = time * 60
         text = speech_to_text.SpeechToText(config).long_asynchronous_meet(seconds=time)
 
-    output_and_modification(text, config.speakers, config.speaker_count)
+    text = output_and_modification(text, config.speakers, config.speaker_count)
 
     more_than_30, more_than_10, random_keywords = analyze_text.AnalyzeText(speakers=config.speakers, speaker_count=config.speaker_count, random_keywords_count=RANDOM_KEYWORDS_COUNT).analyze(text)
     print_export_analysis(text, more_than_30, more_than_10, random_keywords)

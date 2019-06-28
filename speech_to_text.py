@@ -214,7 +214,7 @@ class SpeechToText:
         wf.writeframes(b''.join(frames))
         wf.close()
 
-        print("Uploading to Google Cloud")
+        print("Uploading to Google Cloud...")
         storage_client = storage.Client.from_service_account_json('Dolly-secret.json')
         bucket = storage_client.get_bucket("dolly-long-audio")
         blob = bucket.blob(filename)
@@ -234,7 +234,10 @@ class SpeechToText:
         # them to get the transcripts for the entire audio file.
         text = ""
         for result in response.results:
-            text += result.alternatives[0].transcript + '\n'
+            speaker_num = result.alternatives[0].words[0].speaker_tag
+            speaker = self.config.speakers[speaker_num - 1]
+
+            text += speaker + result.alternatives[0].transcript + '\n'
             # The first alternative is the most likely one for this portion.
             # print(u'Transcript: {}'.format(result.alternatives[0].transcript))
             # print('Confidence: {}'.format(result.alternatives[0].confidence))
