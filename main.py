@@ -13,7 +13,6 @@ from google.cloud.speech_v1p1beta1 import enums
 from google.cloud.speech_v1p1beta1 import types
 import pyaudio
 from six.moves import queue
-import wave
 
 import speech_recognition as sr
 
