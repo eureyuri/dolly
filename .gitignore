@@ -1,3 +1,4 @@
 *.json
 .DS_Store
-output/
+output/*.txt
+output/audio_long_meeting

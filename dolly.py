@@ -38,7 +38,8 @@ def instructions():
         language = language.lower()
         # TODO
         # print("Enter either English, Korean, Japanese, Chinese: ")
-        # language = short_response(["english", "korean", "japanese", "chinese"])
+        # language = short_response(["english", "korean",
+        #                                   "japanese", "chinese"])
 
     if language == "english":
         language_code = "en-US"
@@ -72,7 +73,8 @@ def instructions():
 
     speakers = []
     for i in range(speaker_count):
-        speakers.append(input("Input person " + str(i + 1) + "'s name: ") + ": ")
+        speakers.append(input("Input person "
+                              + str(i + 1) + "'s name: ") + ": ")
 
     return language_code, exit_command, speaker_count, speakers
 
@@ -86,7 +88,8 @@ def output_and_modification(output, speakers, speaker_count):
     switch = ""
     while switch != "y" and switch != "n":
         print()
-        switch = input("Would you like to switch the speaker names? (y/n): ").lower()
+        switch = input("Would you like to switch the "\
+                       "speaker names? (y/n): ").lower()
 
     if switch == "y":
         switching = True
@@ -135,7 +138,10 @@ def print_export_analysis(output, more_than_30, more_than_10, random_keywords):
     print("Exporting transcript...")
     print()
 
-    output += "\n------\n Mentioned more than 30 times: " + str(more_than_30) + "\n------\n Mentioned more than 10 times: " + str(more_than_10) + "\n------\n Dolly's random suggestions: " + str(random_keywords) + "\n------\n"
+    output += "\n------\n Mentioned more than 30 times: " + str(more_than_30)
+    output += "\n------\n Mentioned more than 10 times: " + str(more_than_10)
+    output += "\n------\n Dolly's random suggestions: " + str(random_keywords)
+    output += "\n------\n"
 
     now = datetime.datetime.now()
     now = now.strftime("%Y-%m-%d_%H:%M")
@@ -152,11 +158,14 @@ def print_export_analysis(output, more_than_30, more_than_10, random_keywords):
 def run(language_code, exit_command, speaker_count, speakers):
     global SAMPLE_RATE, CHUNK
 
-    config = speech_to_text.SpeechToTextConfig(speakers, speaker_count, SAMPLE_RATE, CHUNK, language_code, exit_command)
+    config = speech_to_text.SpeechToTextConfig(speakers, speaker_count,
+                                               SAMPLE_RATE, CHUNK,
+                                               language_code, exit_command)
 
     short_or_long = ""
     while short_or_long not in ['y', 'n']:
-        short_or_long = input("Will your meeting be over 5 minutes? (y/n): ").lower()
+        short_or_long = input("Will your meeting be "\
+                              "over 5 minutes? (y/n): ").lower()
 
     if short_or_long == 'n':
         print("Dolly is litening...")
@@ -165,7 +174,8 @@ def run(language_code, exit_command, speaker_count, speakers):
     elif short_or_long == 'y':
         time = ""
         while not isinstance(time, int):
-            time = input("Approximately, how long will your meeting be? (min): ")
+            time = input("Approximately, how long will "\
+                         "your meeting be? (min): ")
             try:
                 time = int(time)
             except:
@@ -173,11 +183,14 @@ def run(language_code, exit_command, speaker_count, speakers):
         print("Dolly is litening...")
         print()
         time = time * 60
-        text = speech_to_text.SpeechToText(config).long_asynchronous_meet(seconds=time)
+        text = speech_to_text.SpeechToText(config).long_asynchronous_meet(
+            seconds=time)
 
     text = output_and_modification(text, config.speakers, config.speaker_count)
 
-    more_than_30, more_than_10, random_keywords = analyze_text.AnalyzeText(speakers=config.speakers, speaker_count=config.speaker_count, random_keywords_count=RANDOM_KEYWORDS_COUNT).analyze(text)
+    more_than_30, more_than_10, random_keywords = analyze_text.AnalyzeText(
+        speakers=config.speakers, speaker_count=config.speaker_count,
+        random_keywords_count=RANDOM_KEYWORDS_COUNT).analyze(text)
     print_export_analysis(text, more_than_30, more_than_10, random_keywords)
 
 

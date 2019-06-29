@@ -10,7 +10,8 @@ class AnalyzeText:
         self.speakers = speakers
         self.speaker_count = speaker_count
         self.stopword_set = set(stopwords.words('english'))
-        self.stopword_set = self.stopword_set.union(set(speaker.strip() for speaker in self.speakers))
+        self.stopword_set = self.stopword_set.union(
+            set(speaker.strip() for speaker in self.speakers))
         self.random_keywords_count = random_keywords_count
 
     def word_count(self, output):
@@ -36,11 +37,21 @@ class AnalyzeText:
                 more_than_10.append(word)
 
         warnings.filterwarnings('ignore')
-        tfidf_vectorizer = TfidfVectorizer(analyzer='word', stop_words=sorted(list(self.stopword_set.union(name.strip(': ') for name in self.speakers))))
+        tfidf_vectorizer = TfidfVectorizer(analyzer='word',
+                                           stop_words=sorted(
+                                               list(self.stopword_set.union(
+                                                   name.strip(': ')
+                                                   for name in self.speakers)))
+                                           )
         tfidf_vectors = tfidf_vectorizer.fit_transform([output])
         first_tfidf_vector = tfidf_vectors[0]
-        random_keywords = pd.DataFrame(first_tfidf_vector.T.todense(), index=tfidf_vectorizer.get_feature_names(), columns=["tfidf"])
-        random_keywords = random_keywords.sort_values(by=["tfidf"], ascending=False)
-        random_keywords = random_keywords.head(self.random_keywords_count).index.tolist()
+        random_keywords = pd.DataFrame(first_tfidf_vector.T.todense(),
+                                       index=tfidf_vectorizer.
+                                       get_feature_names(),
+                                       columns=["tfidf"])
+        random_keywords = random_keywords.sort_values(by=["tfidf"],
+                                                      ascending=False)
+        random_keywords = random_keywords.head(
+            self.random_keywords_count).index.tolist()
 
         return more_than_30, more_than_10, random_keywords
