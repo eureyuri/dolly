@@ -4,7 +4,7 @@ google-cloud-speech==1.0.0
 googleapis-common-protos==1.6.0
 grpcio==1.21.1
 grpcio-tools==1.21.1
-nltk==3.4.3
+nltk==3.4.5
 numpy==1.16.4
 pandas==0.24.2
 PyAudio==0.2.11
